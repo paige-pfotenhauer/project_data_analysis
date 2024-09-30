@@ -14,5 +14,41 @@ dat <- read.table("GSE203554_borchelt.final.txt")
 genotyping_tibble <- read.table("GSE203554_borchelt.final.txt", header = TRUE)
 
 #renaming the header names
-genotyping_tibble_headernames <- rename(genotyping_tibble, WT_1 = WT_191)
 
+
+genotyping_tibble_headernames <- 
+  genotyping_tibble %>% 
+   rename(
+    WT_1 = WT_191,
+    WT_2 = WT_207,
+    WT_3 = WT_214,
+    WT_4 = WT_218,
+    WT_5 = WT_225,
+  
+    APP_PSI_CNT_1 = APPPI184,
+    APP_PSI_CNT_2 = APPPI255,
+    APP_PSI_CNT_3 = APPPI262,
+    APP_PSI_CNT_4 = APPPI307,
+    APP_PSI_CNT_5 = APPPI318,
+    
+    APP_PSI_BCI838_1 = APPPI198,
+    APP_PSI_BCI838_2 =APPPI245,
+    APP_PSI_BCI838_3 =APPPI288,
+    APP_PSI_BCI838_4 =APPPI322,
+    
+    APP_PSI_PE_1 = APPPI224,
+    APP_PSI_PE_2 = APPPI236,
+    APP_PSI_PE_3 = APPPI264,
+    APP_PSI_PE_4 = APPPI275,
+    APP_PSI_PE_5 = APPPI313,
+    
+    APP_PSI_BCI838_PE_1 = APPPI182,
+    APP_PSI_BCI838_PE_2 = APPPI286,
+    APP_PSI_BCI838_PE_3 =APPPI320,
+    APP_PSI_BCI838_PE_4 =APPPI321,
+    APP_PSI_BCI838_PE_5 =APPPI376
+  )
+
+
+#DoHeatMap
+  
