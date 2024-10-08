@@ -8,16 +8,15 @@ pacman::p_load(tidyverse,
 #install_github("mvuorre/exampleRPackage")
 #help(janitor)
 
-dat <- read.table("GSE203554_borchelt.final.txt")
+dat <- read.table("GSE203554_normalised.borchelt.final.txt")
 
 #creating a tibble and moving column names to the header
-genotyping_tibble <- read.table("GSE203554_borchelt.final.txt", header = TRUE)
+gene_raw <- read.table("GSE203554_normalised.borchelt.final.txt", header = TRUE)
 
-#renaming the header names
+#renaming the header names to change from assigned number to descriptive value
 
-
-genotyping_tibble_headernames <- 
-  genotyping_tibble %>% 
+gene_headernames_adjusted <- 
+  gene_raw %>% 
    rename(
     WT_1 = WT_191,
     WT_2 = WT_207,
