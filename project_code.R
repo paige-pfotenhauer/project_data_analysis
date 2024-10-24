@@ -13,7 +13,7 @@ dat <- read.table("GSE203554_normalised.borchelt.final.txt")
 #creating a tibble and moving column names to the header
 gene_raw <- read.table("GSE203554_normalised.borchelt.final.txt", header = TRUE)
 
-#renaming the header names to change from assigned number to descriptive value
+#renaming the headers to change from assigned number to descriptive value
 
 gene_headernames_adjusted <- 
   gene_raw %>% 
@@ -47,7 +47,4 @@ gene_headernames_adjusted <-
     APP_PSI_BCI838_PE_4 =APPPI321,
     APP_PSI_BCI838_PE_5 =APPPI376
   )
-
-
-#DoHeatMap
   
