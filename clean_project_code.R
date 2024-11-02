@@ -3,7 +3,9 @@
 pacman::p_load(tidyverse, 
                devtools,
                janitor,
-               dplyr)
+               dplyr,
+               stats,
+               patchwork)
 
 #install_github("mvuorre/exampleRPackage")
 #help(janitor)
@@ -48,3 +50,4 @@ gene_headernames_adjusted <-
     APP_PSI_BCI838_PE_5 =APPPI376
   )
   
+
