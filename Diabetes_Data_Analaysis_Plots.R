@@ -25,23 +25,19 @@ head(corr[, 1:8])
 
 ggcorrplot(correlation_plot, col = viridis)
 
-#colnames(diabetes) <- c("Pregnancies", "Glucose", "Blood Pressure", "Skin Thickness", "Insulin", "Body Mass Index",
+colnames(diabetes) <- c("Pregnancies", "Glucose", "Blood Pressure", "Skin Thickness", "Insulin", "Body Mass Index",
                            "Diabetes Pedigree Function", "Age", "Outcome")
 
-
-
-
-
-#corr_matrix <- ggcorrplot(
- # corr_matrix,
-  #hc.order = TRUE,
-  #lab = TRUE, 
-  #lab_size = 3) +
-  #guides(fill = guide_legend(title = "Correlation Strength")) +
-  #ggtitle("Correlation of Diagnostic Health Measurments") +
-  #theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-     #   plot.margin = margin(7, 7, 7, 7),
-    #    legend.justification = "center")
+corr_matrix <- ggcorrplot(
+  corr_matrix,
+  hc.order = TRUE,
+  lab = TRUE, 
+  lab_size = 3) +
+  guides(fill = guide_legend(title = "Correlation Strength")) +
+  ggtitle("Correlation of Diagnostic Health Measurments") +
+  theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+      plot.margin = margin(7, 7, 7, 7),
+      legend.justification = "center")
         
 # Binary linear regression
 #set.seed(123)
