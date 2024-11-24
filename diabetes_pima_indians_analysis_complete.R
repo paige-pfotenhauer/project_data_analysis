@@ -46,8 +46,9 @@ ggcorrplot(
   ggtitle("Correlation Matrix of Health Factors") +
   theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),  # Rotate x-axis labels to vertical
-    plot.title = element_text(hjust = 0.5), # Center the plot title
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), # Center the plot title
     axis.title.x = element_blank(),  # Remove x-axis title
     axis.title.y = element_blank()   # Remove y-axis title
   ) +
@@ -55,6 +56,7 @@ ggcorrplot(
     fill = guide_colorbar(title = NULL)  # Remove the color legend title
   )
 
+##############
 ##############
 
 # Binary logistic regression (Glucose)
@@ -67,14 +69,18 @@ summary(model)
 diabetes$predicted_prob_glucose <- predict(model, type = "response")
 
 ggplot(diabetes, aes(x = Glucose, y = Outcome)) +
-geom_point(alpha = 0.5) +  # Scatter plot of actual data
-geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
-labs(title = "Glucose Levels and Outcome",
-   x = "Glucose Level (mg/dL)",
-   y = "P(diabetes)") +
-theme_minimal() +
+  geom_point(alpha = 0.5) +  # Scatter plot of actual data
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE, color = "red", fill = "pink", linewidth = 1.2) +
+    labs(
+      title = "Glucose Levels and Outcome",
+      x = "Glucose Level (mg/dL)",
+      y = "P(diabetes)") +
+  theme_minimal(base_size = 14) +
   theme(
-    plot.title = element_text(hjust = 0.5), # Center the plot title
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1), # Black border
   )
 
 # Model summary and fit statistics
@@ -87,26 +93,35 @@ exp(coef(model))
 1 - model$deviance / model$null.deviance
 
 ##############
+##############
 
-# Binary logistic regression (DPF)
+# Binary logistic regression (Glucose + Insulin)
 set.seed(123)
 
-model <- glm(Outcome ~ DiabetesPedigreeFunction, data = diabetes, family = binomial)
+model <- glm(Outcome ~ Glucose + Insulin, data = diabetes, family = binomial)
+summary(model)
+
+# Model summary and fit statistics
+summary(model)
+
+# Convert logistic regression output to odds ratio
+exp(coef(model))
+
+# McFadden's R^2
+1 - model$deviance / model$null.deviance
+
+
+##############
+##############
+
+# Binary logistic regression (All Variables)
+set.seed(123)
+
+model <- glm(Outcome ~ Glucose + DiabetesPedigreeFunction + Pregnancies + Glucose + BloodPressure + SkinThickness + Insulin + BMI + Age , data = diabetes, family = binomial)
 summary(model)
 
 # Create a new data frame for predictions
-diabetes$predicted_prob_DPF <- predict(model, type = "response")
-
-ggplot(diabetes, aes(x = DiabetesPedigreeFunction, y = Outcome)) +
-  geom_point(alpha = 0.5) +  # Scatter plot of actual data
-  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
-  labs(title = "Diabetes Pedigree Function and Outcome",
-       x = "Diabetes Pedigree Function",
-       y = "P(diabetes)") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5), # Center the plot title
-  )
+diabetes$predicted_prob_AllVariables <- predict(model, type = "response")
 
 # Model summary and fit statistics
 summary(model)
@@ -118,38 +133,4 @@ exp(coef(model))
 1 - model$deviance / model$null.deviance
 
 ##############
-
-# Binary logistic regression (Glucose, Body Mass Index, Pregnancies, Age)
-set.seed(123)
-
-model <- glm(Outcome ~ Glucose + BodyMassIndex + Pregnancies + Age, data = diabetes, family = binomial)
-summary(model)
-
-# Create a new data frame for predictions
-diabetes$predicted_prob_covariates <- predict(model, type = "response")
-
-ggplot(diabetes, aes(x = , y = Outcome)) +
-  geom_point(alpha = 0.5) +  # Scatter plot of actual data
-  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE) +
-  labs(title = "Glucose Levels and Outcome",
-       x = "Glucose Level (mg/dL)",
-       y = "P(diabetes)") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5), # Center the plot title
-  )
-
-# Model summary and fit statistics
-summary(model)
-
-# Convert logistic regression output to odds ratio
-exp(coef(model))
-
-# McFadden's R^2
-1 - model$deviance / model$null.deviance
-
 ##############
-
-# "null model" that's just covariates (sex, age, education)
-
-# "hypothesis model" add in glucose and see how much value it brings to the model with R2
