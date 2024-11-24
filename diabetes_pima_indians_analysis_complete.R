@@ -12,7 +12,9 @@ pacman::p_load(tidyverse,
                patchwork,
                ggplot2,
                tidymodels,
-               ggcorrplot
+               ggcorrplot,
+               knitr,
+               kableExtra
 )
 #install.packages("ggcorrplot")
 library(ggcorrplot)
@@ -62,7 +64,7 @@ ggcorrplot(
 # Binary logistic regression (Glucose)
 set.seed(123)
 
-model <- glm(Outcome ~ Glucose, data = diabetes, family = binomial)
+model_glucose <- glm(Outcome ~ Glucose, data = diabetes, family = binomial)
 summary(model)
 
 # Create a new data frame for predictions
@@ -95,10 +97,10 @@ exp(coef(model))
 ##############
 ##############
 
-# Binary logistic regression (Glucose + Insulin)
+# Binary logistic regression (Glucose + BMI)
 set.seed(123)
 
-model <- glm(Outcome ~ Glucose + Insulin, data = diabetes, family = binomial)
+model_glucose_insulin <- glm(Outcome ~ Glucose + BMI, data = diabetes, family = binomial)
 summary(model)
 
 # Model summary and fit statistics
@@ -117,7 +119,7 @@ exp(coef(model))
 # Binary logistic regression (All Variables)
 set.seed(123)
 
-model <- glm(Outcome ~ Glucose + DiabetesPedigreeFunction + Pregnancies + Glucose + BloodPressure + SkinThickness + Insulin + BMI + Age , data = diabetes, family = binomial)
+model_all <- glm(Outcome ~ Glucose + DiabetesPedigreeFunction + Pregnancies + Glucose + BloodPressure + SkinThickness + Insulin + BMI + Age , data = diabetes, family = binomial)
 summary(model)
 
 # Create a new data frame for predictions
@@ -134,3 +136,31 @@ exp(coef(model))
 
 ##############
 ##############
+
+# Format a table of logistic regression results (glucose vs glucose + insulin vs all variables)
+
+# Custom model names
+custom_model_names <- c("Single Predictor Model (Glucose)", "Reduced Model (Key Variables)", "Full Model (All Variables)")
+
+# Calculate AIC and McFadden's R^2 for each model
+model_comparison <- data.frame(
+  Model = custom_model_names,
+  AIC = c(AIC(model_glucose), AIC(model_glucose_insulin), AIC(model_all)),
+  McFaddens_R2 = c(
+    1 - model_glucose$deviance / model_glucose$null.deviance,
+    1 - model_glucose_insulin$deviance / model_glucose_insulin$null.deviance,
+    1 - model_all$deviance / model_all$null.deviance
+  )
+)
+
+# Comparison table using Kable
+model_comparison %>%
+  kable(
+    caption = "Comparison of Logistic Regression Models",
+    col.names = c("Model", "AIC", "McFadden's R^2"),
+    digits = 3,  # Round numbers to 3 decimal places
+    align = c("l", "l", "l"),
+    format = "html"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+
