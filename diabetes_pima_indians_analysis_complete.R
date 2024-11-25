@@ -24,17 +24,21 @@ library(ggcorrplot)
 # Read data file
 diabetes <- read.csv("diabetes.csv")
 
-# Make a copy of the diabetes dataset so the columns can be renamed
+# Make a copy of the diabetes data set so the columns can be renamed for correlation matrix
 diabetes_copy = diabetes
+
+####################
+# Correlation Matrix
+####################
 
 # Set column names
 colnames(diabetes_copy) <- c("Pregnancies", "Glucose", "Blood Pressure", "Skin Thickness", "Insulin", "Body Mass Index",
                         "Diabetes Pedigree Function", "Age", "Outcome")
 
-# Calculate the correlation matrix (excluding the Outcome column if it's binary)
+# Calculate the correlation matrix
 correlation_matrix <- round(cor(diabetes_copy), 1)
 
-# Set consistent row and columnm names
+# Set consistent row and column names
 rownames(correlation_matrix) <- colnames(correlation_matrix)
 
 # Create the correlation plot using ggcorrplot
@@ -42,11 +46,11 @@ ggcorrplot(
   correlation_matrix,
   hc.order = TRUE, # Sort correlation matrix hierarchically 
   type = "full",
-  lab = TRUE, # Add correlation coefficient labs to plot
+  lab = TRUE, # Add correlation coefficient labels to plot
   lab_size = 3, # Size of correlation coefficient
   colors = viridis::viridis(3) # Viridis is a color blind friendly color palette
 ) +
-  ggtitle("Correlation Matrix of Health Factors") +
+  ggtitle("Correlation Matrix of Health Metrics and Diabetes") +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 10),
@@ -59,12 +63,14 @@ ggcorrplot(
     fill = guide_colorbar(title = NULL)  # Remove the color legend title
   )
 
-##############
-##############
-
+#######################################
 # Binary logistic regression (Glucose)
+#######################################
+
+# Set seed for reproducible results each time running code
 set.seed(123)
 
+# Binary logistic regression
 model_glucose <- glm(Outcome ~ Glucose, data = diabetes, family = binomial)
 summary(model)
 
@@ -87,58 +93,59 @@ ggplot(diabetes, aes(x = Glucose, y = Outcome)) +
   )
 
 # Model summary and fit statistics
-summary(model)
+summary(model_glucose)
 
 # Convert logistic regression output to odds ratio
-exp(coef(model))
+exp(coef(model_glucose))
 
 # McFadden's R^2
-1 - model$deviance / model$null.deviance
+1 - model_glucose$deviance / model_glucose$null.deviance
 
-##############
-##############
-
+############################################
 # Binary logistic regression (Glucose + BMI)
+############################################
+
 set.seed(123)
 
 model_glucose_insulin <- glm(Outcome ~ Glucose + BMI, data = diabetes, family = binomial)
-summary(model)
+summary(model_glucose_insulin)
 
 # Model summary and fit statistics
-summary(model)
+summary(model_glucose_insulin)
 
 # Convert logistic regression output to odds ratio
-exp(coef(model))
+exp(coef(model_glucose_insulin))
 
 # McFadden's R^2
-1 - model$deviance / model$null.deviance
+1 - model_glucose_insultion$deviance / model_glucose_insulin$null.deviance
 
 
-##############
-##############
-
+############################################
 # Binary logistic regression (All Variables)
+############################################
+
 set.seed(123)
 
 model_all <- glm(Outcome ~ Glucose + DiabetesPedigreeFunction + Pregnancies + Glucose + BloodPressure + SkinThickness + Insulin + BMI + Age , data = diabetes, family = binomial)
-summary(model)
+summary(model_all)
 
 # Create a new data frame for predictions
-diabetes$predicted_prob_AllVariables <- predict(model, type = "response")
+diabetes$predicted_prob_AllVariables <- predict(model_all, type = "response")
 
 # Model summary and fit statistics
-summary(model)
+summary(model_all)
 
 # Convert logistic regression output to odds ratio
-exp(coef(model))
+exp(coef(model_all))
 
 # McFadden's R^2
-1 - model$deviance / model$null.deviance
+1 - model_all$deviance / model_all$null.deviance
 
-##############
-##############
+# Create table of odds ratio values 
 
+################################################################################################
 # Format a table of logistic regression results (glucose vs glucose + insulin vs all variables)
+################################################################################################
 
 # Custom model names
 custom_model_names <- c("Single Predictor (Glucose)", "Reduced (Glucose + BMI)", "Full (All Variables)")
