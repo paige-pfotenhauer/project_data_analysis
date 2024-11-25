@@ -14,6 +14,7 @@ pacman::p_load(tidyverse,
                tidymodels,
                ggcorrplot,
                knitr,
+               pROC,
                kableExtra
 )
 #install.packages("ggcorrplot")
@@ -140,7 +141,7 @@ exp(coef(model))
 # Format a table of logistic regression results (glucose vs glucose + insulin vs all variables)
 
 # Custom model names
-custom_model_names <- c("Single Predictor Model (Glucose)", "Reduced Model (Key Variables)", "Full Model (All Variables)")
+custom_model_names <- c("Single Predictor (Glucose)", "Reduced (Glucose + BMI)", "Full (All Variables)")
 
 # Calculate AIC and McFadden's R^2 for each model
 model_comparison <- data.frame(
@@ -156,11 +157,11 @@ model_comparison <- data.frame(
 # Comparison table using Kable
 model_comparison %>%
   kable(
-    caption = "Comparison of Logistic Regression Models",
+    caption = "Table 1: Comparison of Logistic Regression Models",
     col.names = c("Model", "AIC", "McFadden's R^2"),
     digits = 3,  # Round numbers to 3 decimal places
     align = c("l", "l", "l"),
     format = "html"
   ) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+  kable_styling(bootstrap_options = c("striped"), full_width = F)
 
