@@ -24,12 +24,33 @@ library(ggcorrplot)
 # Read data file
 diabetes <- read.csv("diabetes.csv")
 
-# Make a copy of the diabetes data set so the columns can be renamed for correlation matrix
-diabetes_copy = diabetes
+################
+# Data Cleaning
+################
 
-####################
+# Make a copy of the dataset for cleaning
+diabetes_clean = diabetes
+
+# Calculate the mean of the columns with illogical zero values, excluding zeros
+glucose_mean <- mean(diabetes_clean$Glucose[diabetes_clean$Glucose != 0])
+bloodpressure_mean <- mean(diabetes_clean$BloodPressure[diabetes_clean$BloodPressure != 0])
+skinthickness_mean <- mean(diabetes_clean$SkinThickness[diabetes_clean$SkinThickness != 0])
+insulin_mean <- mean(diabetes_clean$Insulin[diabetes_clean$Insulin != 0])
+BMI_mean <- mean(diabetes_clean$BMI[diabetes_clean$BMI != 0])
+
+# Replace zero values in the columns with illogical zero values with the calculated mean
+diabetes_clean$Glucose[diabetes_clean$Glucose == 0] <- glucose_mean
+diabetes_clean$BloodPressure[diabetes_clean$BloodPressure == 0] <- bloodpressure_mean
+diabetes_clean$SkinThickness[diabetes_clean$SkinThickness == 0] <- skinthickness_mean
+diabetes_clean$Insulin[diabetes_clean$Insulin== 0] <- insulin_mean
+diabetes_clean$BMI[diabetes_clean$BMI== 0] <- BMI_mean
+
+#####################
 # Correlation Matrix
-####################
+#####################
+
+# Make a copy of the diabetes data set so the columns can be renamed for correlation matrix
+diabetes_copy = diabetes_clean
 
 # Set column names
 colnames(diabetes_copy) <- c("Pregnancies", "Glucose", "Blood Pressure", "Skin Thickness", "Insulin", "Body Mass Index",
@@ -71,13 +92,13 @@ ggcorrplot(
 set.seed(123)
 
 # Binary logistic regression
-model_glucose <- glm(Outcome ~ Glucose, data = diabetes, family = binomial)
-summary(model)
+model_glucose <- glm(Outcome ~ Glucose, data = diabetes_clean, family = binomial)
+summary(model_glucose)
 
 # Create a new data frame for predictions
-diabetes$predicted_prob_glucose <- predict(model, type = "response")
+diabetes_clean$predicted_prob_glucose <- predict(model_glucose, type = "response")
 
-ggplot(diabetes, aes(x = Glucose, y = Outcome)) +
+ggplot(diabetes_clean, aes(x = Glucose, y = Outcome)) +
   geom_point(alpha = 0.5) +  # Scatter plot of actual data
   geom_smooth(method = "glm", method.args = list(family = "binomial"), se = TRUE, color = "red", fill = "pink", linewidth = 1.2) +
     labs(
@@ -107,17 +128,17 @@ exp(coef(model_glucose))
 
 set.seed(123)
 
-model_glucose_insulin <- glm(Outcome ~ Glucose + BMI, data = diabetes, family = binomial)
-summary(model_glucose_insulin)
+model_glucose_BMI <- glm(Outcome ~ Glucose + BMI, data = diabetes_clean, family = binomial)
+summary(model_glucose_BMI)
 
 # Model summary and fit statistics
-summary(model_glucose_insulin)
+summary(model_glucose_BMI)
 
 # Convert logistic regression output to odds ratio
-exp(coef(model_glucose_insulin))
+exp(coef(model_glucose_BMI))
 
 # McFadden's R^2
-1 - model_glucose_insultion$deviance / model_glucose_insulin$null.deviance
+1 - model_glucose_BMI$deviance / model_glucose_BMI$null.deviance
 
 
 ############################################
@@ -126,11 +147,11 @@ exp(coef(model_glucose_insulin))
 
 set.seed(123)
 
-model_all <- glm(Outcome ~ Glucose + DiabetesPedigreeFunction + Pregnancies + Glucose + BloodPressure + SkinThickness + Insulin + BMI + Age , data = diabetes, family = binomial)
+model_all <- glm(Outcome ~ Glucose + DiabetesPedigreeFunction + Pregnancies + Glucose + BloodPressure + SkinThickness + Insulin + BMI + Age , data = diabetes_clean, family = binomial)
 summary(model_all)
 
 # Create a new data frame for predictions
-diabetes$predicted_prob_AllVariables <- predict(model_all, type = "response")
+diabetes_clean$predicted_prob_AllVariables <- predict(model_all, type = "response")
 
 # Model summary and fit statistics
 summary(model_all)
@@ -153,10 +174,10 @@ custom_model_names <- c("Single Predictor (Glucose)", "Reduced (Glucose + BMI)",
 # Calculate AIC and McFadden's R^2 for each model
 model_comparison <- data.frame(
   Model = custom_model_names,
-  AIC = c(AIC(model_glucose), AIC(model_glucose_insulin), AIC(model_all)),
+  AIC = c(AIC(model_glucose), AIC(model_glucose_BMI), AIC(model_all)),
   McFaddens_R2 = c(
     1 - model_glucose$deviance / model_glucose$null.deviance,
-    1 - model_glucose_insulin$deviance / model_glucose_insulin$null.deviance,
+    1 - model_glucose_BMI$deviance / model_glucose_BMI$null.deviance,
     1 - model_all$deviance / model_all$null.deviance
   )
 )
