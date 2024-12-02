@@ -15,7 +15,8 @@ pacman::p_load(tidyverse,
                ggcorrplot,
                knitr,
                pROC,
-               kableExtra
+               kableExtra,
+               broom
 )
 #install.packages("ggcorrplot")
 library(ggcorrplot)
@@ -31,17 +32,21 @@ diabetes <- read.csv("diabetes.csv")
 # Make a copy of the dataset for cleaning
 diabetes_clean = diabetes
 
+# Set column names
+colnames(diabetes_clean) <- c("Pregnancies", "Glucose", "Blood_Pressure", "Skin_Thickness", "Insulin", "BMI",
+                             "Diabetes_Pedigree_Function", "Age", "Outcome")
+
 # Calculate the mean of the columns with illogical zero values, excluding zeros
 glucose_mean <- mean(diabetes_clean$Glucose[diabetes_clean$Glucose != 0])
-bloodpressure_mean <- mean(diabetes_clean$BloodPressure[diabetes_clean$BloodPressure != 0])
-skinthickness_mean <- mean(diabetes_clean$SkinThickness[diabetes_clean$SkinThickness != 0])
+bloodpressure_mean <- mean(diabetes_clean$Blood_Pressure[diabetes_clean$Blood_Pressure != 0])
+skinthickness_mean <- mean(diabetes_clean$Skin_Thickness[diabetes_clean$Skin_Thickness != 0])
 insulin_mean <- mean(diabetes_clean$Insulin[diabetes_clean$Insulin != 0])
 BMI_mean <- mean(diabetes_clean$BMI[diabetes_clean$BMI != 0])
 
 # Replace zero values in the columns with illogical zero values with the calculated mean
 diabetes_clean$Glucose[diabetes_clean$Glucose == 0] <- glucose_mean
-diabetes_clean$BloodPressure[diabetes_clean$BloodPressure == 0] <- bloodpressure_mean
-diabetes_clean$SkinThickness[diabetes_clean$SkinThickness == 0] <- skinthickness_mean
+diabetes_clean$Blood_Pressure[diabetes_clean$Blood_Pressure == 0] <- bloodpressure_mean
+diabetes_clean$Skin_Thickness[diabetes_clean$Skin_Thickness == 0] <- skinthickness_mean
 diabetes_clean$Insulin[diabetes_clean$Insulin== 0] <- insulin_mean
 diabetes_clean$BMI[diabetes_clean$BMI== 0] <- BMI_mean
 
@@ -65,7 +70,7 @@ rownames(correlation_matrix) <- colnames(correlation_matrix)
 # Create the correlation plot using ggcorrplot
 ggcorrplot(
   correlation_matrix,
-  hc.order = TRUE, # Sort correlation matrix hierarchically 
+  #hc.order = TRUE, # Sort correlation matrix hierarchically 
   type = "full",
   lab = TRUE, # Add correlation coefficient labels to plot
   lab_size = 3, # Size of correlation coefficient
@@ -140,6 +145,37 @@ exp(coef(model_glucose_BMI))
 # McFadden's R^2
 1 - model_glucose_BMI$deviance / model_glucose_BMI$null.deviance
 
+#################################################################
+# Produce a summary statistics table for key variable model
+#################################################################
+
+# Summary statistics
+summary_stats_model_key <- summary(model_glucose_BMI)
+
+# Convert logistic regression output to odds ratio
+odds_ratios_model_key <- exp(coef(model_glucose_BMI))
+
+# Extract metrics
+results_model_key <- tidy(model_glucose_BMI)
+
+# Calculate Chi-Square values
+results_model_key <- results_model_key %>%
+  mutate(chi_square = (estimate / std.error)^2,
+         odds_ratio = exp(estimate))
+
+# Remove underscores from table names
+table_data_model_key$Variable <- gsub("_", " ", table_data_model_key$Variable)
+
+# Generate table
+kable(
+  table_data_model_key,
+  col.names = c("Variable", "Coefficient", "Chi Square", "P-Value", "Odds Ratio"),
+  format = "html",
+  digits = 5,
+  caption = "Full Model (All Variables) Logistic Regression Summary"
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+
 
 ############################################
 # Binary logistic regression (All Variables)
@@ -147,7 +183,7 @@ exp(coef(model_glucose_BMI))
 
 set.seed(123)
 
-model_all <- glm(Outcome ~ Glucose + DiabetesPedigreeFunction + Pregnancies + Glucose + BloodPressure + SkinThickness + Insulin + BMI + Age , data = diabetes_clean, family = binomial)
+model_all <- glm(Outcome ~ Glucose + Diabetes_Pedigree_Function + Pregnancies + Glucose + Blood_Pressure + Skin_Thickness + Insulin + BMI + Age , data = diabetes_clean, family = binomial)
 summary(model_all)
 
 # Create a new data frame for predictions
@@ -162,14 +198,45 @@ exp(coef(model_all))
 # McFadden's R^2
 1 - model_all$deviance / model_all$null.deviance
 
-# Create table of odds ratio values 
+
+#################################################################
+# Produce a summary statistics table for the all variable model
+#################################################################
+
+# Summary statistics
+summary_stats_model_all <- summary(model_all)
+
+# Convert logistic regression output to odds ratio
+odds_ratios_model_all <- exp(coef(model_all))
+
+# Extract metrics
+results_model_all <- tidy(model_all)
+
+# Calculate Chi-Square values
+results_model_all <- results_model_all %>%
+  mutate(chi_square = (estimate / std.error)^2,
+         odds_ratio = exp(estimate))
+
+# Remove underscores from table names
+table_data_model_all$Variable <- gsub("_", " ", table_data_model_all$Variable)
+
+# Generate table
+kable(
+  table_data_model_all,
+  col.names = c("Variable", "Coefficient", "Chi Square", "P-Value", "Odds Ratio"),
+  format = "html",
+  digits = 5,
+  caption = "Full Model (All Variables) Logistic Regression Summary"
+) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+
 
 ################################################################################################
 # Format a table of logistic regression results (glucose vs glucose + insulin vs all variables)
 ################################################################################################
 
 # Custom model names
-custom_model_names <- c("Single Predictor (Glucose)", "Reduced (Glucose + BMI)", "Full (All Variables)")
+custom_model_names <- c("Single Predictor (Glucose)", "Key Variables (Glucose + BMI)", "Full (All Variables)")
 
 # Calculate AIC and McFadden's R^2 for each model
 model_comparison <- data.frame(
@@ -185,7 +252,7 @@ model_comparison <- data.frame(
 # Comparison table using Kable
 model_comparison %>%
   kable(
-    caption = "Table 1: Comparison of Logistic Regression Models",
+    caption = "Comparison of Logistic Regression Models",
     col.names = c("Model", "AIC", "McFadden's R^2"),
     digits = 3,  # Round numbers to 3 decimal places
     align = c("l", "l", "l"),
